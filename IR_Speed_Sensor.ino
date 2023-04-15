@@ -16,6 +16,7 @@ unsigned long PeriodSum;
 
 unsigned long startTime;
 unsigned long stopTime;
+unsigned long elapsedTime = 0;
 unsigned long LastTimeCycleMeasure = LastTimeWeMeasured;
 unsigned long CurrentMicros = micros();
 unsigned int AmountOfReadings = 1;
@@ -55,7 +56,7 @@ void loop() {
   // delay(2000);
 
   // start time when car starts moving
-  if (RPM > 0 && move = false){
+  if (RPM > 0 && move == false){
     startTime = millis();
     move = true;
   }
@@ -97,14 +98,14 @@ void loop() {
   // check the RPM and setup timer  
   if (constant == false){
     stopTime = millis();
-    unsigned long elapsedTime = stopTime - startTime;
+    elapsedTime = stopTime - startTime;
     if (RPM - average <= 10){
       constant = true;  // relatively constant
     }    
   }
 
   // predict the future
-  unsigned long predicted = 1 / 60 * elapsedTime * RPM * 1000 * PI * radius;
+  unsigned long predicted = 1.0 / 60.0 * elapsedTime * RPM * 1000 * PI * radius;
   if ((distance + predicted) >= target) {
     digitalWrite(r1, LOW);
   }
