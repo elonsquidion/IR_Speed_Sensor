@@ -14,6 +14,8 @@ unsigned long RPM;
 unsigned int PulseCounter = 1;
 unsigned long PeriodSum;
 
+unsigned long startTime;
+unsigned long stopTime;
 unsigned long LastTimeCycleMeasure = LastTimeWeMeasured;
 unsigned long CurrentMicros = micros();
 unsigned int AmountOfReadings = 1;
@@ -29,15 +31,17 @@ float radius = diameter / 2; // all in centimeter
 int sensorPin = 2;
 int count = 0;
 unsigned long perimeter = PI * diameter;
+bool move = false;
+bool constant = false;
 
 void setup() {
   pinMode(r1, OUTPUT);
   pinMode(sensorPin, INPUT_PULLUP);
   Serial.begin(9600);
   attachInterrupt(digitalPinToInterrupt(2), Pulse_Event, RISING);
-  delay(1000);
-
+  delay(1000);  
 }
+
 void rpm_sensor() {
 }
 
@@ -49,6 +53,12 @@ void loop() {
   // digitalWrite(r1, HIGH);
   // // Kasi Delay 2 detik
   // delay(2000);
+
+  // start time when car starts moving
+  if (RPM > 0 && move = false){
+    startTime = millis();
+    move = true;
+  }
 
   // code that I stole to measure RPM
   LastTimeCycleMeasure = LastTimeWeMeasured;
@@ -84,6 +94,21 @@ void loop() {
   // measure the distance
   distance = count * perimeter;
 
+  // check the RPM and setup timer  
+  if (constant == false){
+    stopTime = millis();
+    unsigned long elapsedTime = stopTime - startTime;
+    if (RPM - average <= 10){
+      constant = true;  // relatively constant
+    }    
+  }
+
+  // predict the future
+  unsigned long predicted = 1 / 60 * elapsedTime * RPM * 1000 * PI * radius;
+  if ((distance + predicted) >= target) {
+    digitalWrite(r1, LOW);
+  }
+
   // Print everything in Serial Monitor, TX lamp will kedap-kedip
   // Serial.print("Period: ");
   // Serial.print(PeriodBetweenPulses);
@@ -95,13 +120,12 @@ void loop() {
   // Serial.print(perimeter);
   Serial.print("RPM: ");
   Serial.print(RPM);
+  Serial.print("\tTachometer: ");
+  Serial.print(average);
   Serial.print("\tCount: ");
   Serial.print(count);
   Serial.print("\tDistance: ");
   Serial.println(distance);
-  // Serial.print("\tTachometer: ");
-  // Serial.println(average);
-
 }
 
 void Pulse_Event() {
