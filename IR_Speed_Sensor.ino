@@ -22,12 +22,13 @@ unsigned long readings[numReadings];
 unsigned long readIndex;  
 unsigned long total; 
 unsigned long average;
-unsigned long distance = 0;
+unsigned long distance;
 unsigned long target = 3000;
 float diameter = 3.7;
 float radius = diameter / 2; // all in centimeter
 int sensorPin = 2;
 int count = 0;
+unsigned long perimeter = PI * diameter;
 
 void setup() {
   pinMode(r1, OUTPUT);
@@ -49,6 +50,7 @@ void loop() {
   // // Kasi Delay 2 detik
   // delay(2000);
 
+  // code that I stole to measure RPM
   LastTimeCycleMeasure = LastTimeWeMeasured;
   CurrentMicros = micros();
   if (CurrentMicros < LastTimeCycleMeasure) {
@@ -62,14 +64,12 @@ void loop() {
     ZeroDebouncingExtra = 0;
   }
   FrequencyReal = FrequencyRaw / 10000;
-
   RPM = FrequencyRaw / PulsesPerRevolution * 60;
   RPM = RPM / 10000;
   total = total - readings[readIndex];
   readings[readIndex] = RPM;
   total = total + readings[readIndex];
   readIndex = readIndex + 1;
-
   if (readIndex >= numReadings) {
     readIndex = 0;
   }
@@ -81,18 +81,24 @@ void loop() {
     delay(100);
   }
 
+  // measure the distance
+  distance = count * perimeter;
 
-
+  // Print everything in Serial Monitor, TX lamp will kedap-kedip
   // Serial.print("Period: ");
   // Serial.print(PeriodBetweenPulses);
   // Serial.print("\tReadings: ");
   // Serial.print(AmountOfReadings);
   // Serial.print("\tFrequency: ");
   // Serial.print(FrequencyReal);
+  // Serial.print("Perimeter: ");
+  // Serial.print(perimeter);
   Serial.print("RPM: ");
   Serial.print(RPM);
   Serial.print("\tCount: ");
-  Serial.println(count);
+  Serial.print(count);
+  Serial.print("\tDistance: ");
+  Serial.println(distance);
   // Serial.print("\tTachometer: ");
   // Serial.println(average);
 
