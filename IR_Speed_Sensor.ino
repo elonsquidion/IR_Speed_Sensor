@@ -40,10 +40,8 @@ void setup() {
   pinMode(sensorPin, INPUT_PULLUP);
   Serial.begin(9600);
   attachInterrupt(digitalPinToInterrupt(2), Pulse_Event, RISING);
+  digitalWrite(r1, HIGH);
   delay(1000);  
-}
-
-void rpm_sensor() {
 }
 
 void loop() {
@@ -96,17 +94,17 @@ void loop() {
   distance = count * perimeter;
 
   // check the RPM and setup timer  
-  if (constant == false){
+  if (constant == false && move){
     stopTime = millis();
     elapsedTime = stopTime - startTime;
-    if (RPM - average <= 10){
+    if abs(RPM - average <= 10){
       constant = true;  // relatively constant
     }    
   }
 
   // predict the future
-  unsigned long predicted = 1.0 / 60.0 * elapsedTime * RPM * 1000 * PI * radius;
-  if ((distance + predicted) >= target) {
+  unsigned long predicted = distance + 1.0 / 60000.0 * elapsedTime * RPM * PI * radius;
+  if (predicted >= target) {
     digitalWrite(r1, LOW);
   }
 
@@ -119,19 +117,21 @@ void loop() {
   // Serial.print(FrequencyReal);
   // Serial.print("Perimeter: ");
   // Serial.print(perimeter);
-  Serial.print("RPM: ");
-  Serial.print(RPM);
-  Serial.print("\tTachometer: ");
-  Serial.print(average);
-  Serial.print("\tCount: ");
-  Serial.print(count);
-  Serial.print("\tDistance: ");
-  Serial.println(distance);
+  // Serial.print("Stats: ");
+  // Serial.print(constant);
+  // Serial.print("RPM: ");
+  // Serial.print(RPM);
+  // Serial.print("\tTachometer: ");
+  // Serial.print(average);
+  // Serial.print("\tCount: ");
+  // Serial.print(count);
+  // Serial.print("\tDistance: ");
+  // Serial.println(distance);
 }
 
 void Pulse_Event() {
   PeriodBetweenPulses = micros() - LastTimeWeMeasured;
-  LastTimeWeMeasured = micros();
+  LastTimeWeMeasured = micros(); 
   if (PulseCounter >= AmountOfReadings)  {
     PeriodAverage = PeriodSum / AmountOfReadings;
     PulseCounter = 1;
