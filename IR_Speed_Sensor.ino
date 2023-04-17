@@ -45,12 +45,10 @@ void setup() {
 }
 
 void loop() {
-  // // Nyalain kipas
-  // digitalWrite(r1, LOW);//NO=NYALA
-  // // Kasi Delay 2 detik
+  // Just line of code to check the relay function. 
+  // digitalWrite(r1, LOW);
   // delay(2000);
   // digitalWrite(r1, HIGH);
-  // // Kasi Delay 2 detik
   // delay(2000);
 
   // start time when car starts moving
@@ -59,7 +57,7 @@ void loop() {
     move = true;
   }
 
-  // code that I stole to measure RPM
+  // code that I stole from internet to measure RPM and I have no idea how it works
   LastTimeCycleMeasure = LastTimeWeMeasured;
   CurrentMicros = micros();
   if (CurrentMicros < LastTimeCycleMeasure) {
@@ -84,10 +82,10 @@ void loop() {
   }
   average = total / numReadings;
 
-  // check if something passed
+  // check if something passed IR sensor
   if(digitalRead(sensorPin) == HIGH) {
     count++;
-    delay(100);
+    delay(100);  // to avoid double measurement for just one event.
   }
 
   // measure the distance
@@ -96,16 +94,24 @@ void loop() {
   // check the RPM and setup timer  
   if (constant == false && move){
     stopTime = millis();
-    elapsedTime = stopTime - startTime;
+    elapsedTime = stopTime - startTime;  // time needed for car reaches its terminal velocity
     if abs(RPM - average <= 10){
       constant = true;  // relatively constant
     }    
   }
 
   // predict the future
+  /*
+  convert RPM to rad/s, 1 RPM = 2PI/60 rad/s. So, 1 RPM = 1/30 PI rad/s. The result should be multiplying by radius to get linear velocity.
+  elapsed time in milisecond so it needs to be converted to second by dividing it by 1000. 1 ms = 1/1000 s.
+
+  for predicted values, we should calculate the area of triangle which has base of elapsed time and height of linear velocity.
+  Thus, predicted values = distance + 1/2 * elapsed time * 1/1000 * 1/30 * PI * radius * RPM.
+  */
+
   unsigned long predicted = distance + 1.0 / 60000.0 * elapsedTime * RPM * PI * radius;
   if (predicted >= target) {
-    digitalWrite(r1, LOW);
+    digitalWrite(r1, LOW);  // stop the current
   }
 
   // Print everything in Serial Monitor, TX lamp will kedap-kedip
@@ -119,6 +125,8 @@ void loop() {
   // Serial.print(perimeter);
   // Serial.print("Stats: ");
   // Serial.print(constant);
+  // Serial.print("Move: ");
+  // Serial.print(move);
   // Serial.print("RPM: ");
   // Serial.print(RPM);
   // Serial.print("\tTachometer: ");
@@ -129,6 +137,7 @@ void loop() {
   // Serial.println(distance);
 }
 
+// it is also the code that I stole from internet.
 void Pulse_Event() {
   PeriodBetweenPulses = micros() - LastTimeWeMeasured;
   LastTimeWeMeasured = micros(); 
