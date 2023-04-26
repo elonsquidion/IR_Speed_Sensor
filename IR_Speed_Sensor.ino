@@ -1,5 +1,6 @@
 #define r1 8
 #define PI 3.1415926535897932384626433832795
+#define gravity 980.67  // cm/s^2
 
 const byte PulsesPerRevolution = 2;
 const unsigned long ZeroTimeout = 100000;
@@ -25,8 +26,9 @@ unsigned long readings[numReadings];
 unsigned long readIndex;  
 unsigned long total; 
 unsigned long average;
-unsigned long distance;
+unsigned long distance = 0;
 unsigned long target = 3000;
+float mass = 0.035; // kg
 float diameter = 3.7;
 float radius = diameter / 2; // all in centimeter
 int sensorPin = 2;
@@ -38,7 +40,7 @@ bool constant = false;
 void setup() {
   pinMode(r1, OUTPUT);
   pinMode(sensorPin, INPUT_PULLUP);
-  Serial.begin(9600);
+  // Serial.begin(9600);
   attachInterrupt(digitalPinToInterrupt(2), Pulse_Event, RISING);
   digitalWrite(r1, HIGH);
   delay(1000);  
@@ -51,11 +53,13 @@ void loop() {
   // digitalWrite(r1, HIGH);
   // delay(2000);
 
+  stopTime = 0;
+
   // start time when car starts moving
-  if (RPM > 0 && move == false){
-    startTime = millis();
-    move = true;
-  }
+  // if (RPM > 0 && move == false){
+  //   startTime = millis();
+  //   move = true;
+  // }
 
   // code that I stole from internet to measure RPM and I have no idea how it works
   LastTimeCycleMeasure = LastTimeWeMeasured;
@@ -84,21 +88,29 @@ void loop() {
 
   // check if something passed IR sensor
   if(digitalRead(sensorPin) == HIGH) {
-    count++;
-    delay(100);  // to avoid double measurement for just one event.
+    // count++;
+    if (startTime == 0){    
+      startTime = millis();
+    } else {
+      stopTime = millis();
+      elapsedTime = stopTime - startTime;
+      // measure the distance
+      distance += RPM * PI / 30000 * radius * elapsedTime;  // yeah boi riemann sum
+      startTime = millis();
+    }
+    // delay(100);  // to avoid double measurement for just one event.
   }
 
-  // measure the distance
-  distance = count * perimeter;
 
   // check the RPM and setup timer  
-  if (constant == false && move){
-    stopTime = millis();
-    elapsedTime = stopTime - startTime;  // time needed for car reaches its terminal velocity
-    if abs(RPM - average <= 10){
-      constant = true;  // relatively constant
-    }    
-  }
+  // if (constant == false && move){
+  //   stopTime = millis();
+  //   elapsedTime = stopTime - startTime;  // time needed for car reaches its terminal velocity
+  //   if abs(RPM - average <= 10){
+  //     constant = true;  // relatively constant
+        
+  
+
 
   // predict the future
   /*
@@ -107,14 +119,25 @@ void loop() {
 
   for predicted values, we should calculate the area of triangle which has base of elapsed time and height of linear velocity.
   Thus, predicted values = distance + 1/2 * elapsed time * 1/1000 * 1/30 * PI * radius * RPM.
+
+  NEVERMIND ALL OF THAT
+
+  make an asumption that mk = 0.3 and t = v/mkg
+  so, 1/2 * t * RPM * PI / 30 radius
   */
 
-  unsigned long predicted = distance + 1.0 / 60000.0 * elapsedTime * RPM * PI * radius;
+  unsigned long vStop = RPM * PI / 30 * radius;
+  unsigned long time = vStop / (0.3 * gravity);
+  unsigned long predicted = distance + 1/2 * vStop * time;
   if (predicted >= target) {
     digitalWrite(r1, LOW);  // stop the current
   }
+  // stopTime = millis();
+  // elapsedTime = stopTime - startTime;  // time needed for car reaches its terminal velocity
 
   // Print everything in Serial Monitor, TX lamp will kedap-kedip
+  // Serial.print("One time loop: ");
+  // Serial.println(elapsedTime * 1000);
   // Serial.print("Period: ");
   // Serial.print(PeriodBetweenPulses);
   // Serial.print("\tReadings: ");
@@ -125,16 +148,19 @@ void loop() {
   // Serial.print(perimeter);
   // Serial.print("Stats: ");
   // Serial.print(constant);
-  // Serial.print("Move: ");
+  // Serial.print("\tMove: ");
   // Serial.print(move);
-  // Serial.print("RPM: ");
-  // Serial.print(RPM);
   // Serial.print("\tTachometer: ");
   // Serial.print(average);
-  // Serial.print("\tCount: ");
+  // Serial.print("\tCount: ");sssssss
   // Serial.print(count);
+  // Serial.print("\tRPM: ");
+  // Serial.print(RPM);
   // Serial.print("\tDistance: ");
-  // Serial.println(distance);
+  // Serial.print(distance);
+  // Serial.print("\Predicted: ");
+  // Serial.println(predicted);
+
 }
 
 // it is also the code that I stole from internet.
