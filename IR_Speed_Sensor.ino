@@ -28,14 +28,9 @@ unsigned long total;
 unsigned long average;
 unsigned long distance = 0;
 unsigned long target = 3000;
-float mass = 0.035; // kg
 float diameter = 3.7;
-float radius = diameter / 2; // all in centimeter
+float radius = diameter / 2; // all in centimeters
 int sensorPin = 2;
-int count = 0;
-unsigned long perimeter = PI * diameter;
-bool move = false;
-bool constant = false;
 
 void setup() {
   pinMode(r1, OUTPUT);
@@ -47,19 +42,7 @@ void setup() {
 }
 
 void loop() {
-  // Just line of code to check the relay function. 
-  // digitalWrite(r1, LOW);
-  // delay(2000);
-  // digitalWrite(r1, HIGH);
-  // delay(2000);
-
   stopTime = 0;
-
-  // start time when car starts moving
-  // if (RPM > 0 && move == false){
-  //   startTime = millis();
-  //   move = true;
-  // }
 
   // code that I stole from internet to measure RPM and I have no idea how it works
   LastTimeCycleMeasure = LastTimeWeMeasured;
@@ -88,42 +71,27 @@ void loop() {
 
   // check if something passed IR sensor
   if(digitalRead(sensorPin) == HIGH) {
-    // count++;
     if (startTime == 0){    
       startTime = millis();
     } else {
       stopTime = millis();
       elapsedTime = stopTime - startTime;
+
       // measure the distance
+      /*
+      1 RPM is 2PI/60 rad/s or PI/30 rad/s.
+      elapsedTime is in miliseconds so it needs to be divided by 1000.
+      the distance is the area of a square that is (velocity x time) or RPM PI/30 1/1000 t  
+      */
       distance += RPM * PI / 30000 * radius * elapsedTime;  // yeah boi riemann sum
       startTime = millis();
     }
-    // delay(100);  // to avoid double measurement for just one event.
   }
-
-
-  // check the RPM and setup timer  
-  // if (constant == false && move){
-  //   stopTime = millis();
-  //   elapsedTime = stopTime - startTime;  // time needed for car reaches its terminal velocity
-  //   if abs(RPM - average <= 10){
-  //     constant = true;  // relatively constant
-        
-  
-
 
   // predict the future
   /*
-  convert RPM to rad/s, 1 RPM = 2PI/60 rad/s. So, 1 RPM = 1/30 PI rad/s. The result should be multiplying by radius to get linear velocity.
-  elapsed time in milisecond so it needs to be converted to second by dividing it by 1000. 1 ms = 1/1000 s.
-
-  for predicted values, we should calculate the area of triangle which has base of elapsed time and height of linear velocity.
-  Thus, predicted values = distance + 1/2 * elapsed time * 1/1000 * 1/30 * PI * radius * RPM.
-
-  NEVERMIND ALL OF THAT
-
   make an asumption that mk = 0.3 and t = v/mkg
-  so, 1/2 * t * RPM * PI / 30 radius
+  so, future distance = 1/2 * t * RPM * PI / 30 radius (area of a triangle)
   */
 
   unsigned long vStop = RPM * PI / 30 * radius;
@@ -132,12 +100,8 @@ void loop() {
   if (predicted >= target) {
     digitalWrite(r1, LOW);  // stop the current
   }
-  // stopTime = millis();
-  // elapsedTime = stopTime - startTime;  // time needed for car reaches its terminal velocity
 
-  // Print everything in Serial Monitor, TX lamp will kedap-kedip
-  // Serial.print("One time loop: ");
-  // Serial.println(elapsedTime * 1000);
+  // Print everything in Serial Monitor
   // Serial.print("Period: ");
   // Serial.print(PeriodBetweenPulses);
   // Serial.print("\tReadings: ");
@@ -152,15 +116,12 @@ void loop() {
   // Serial.print(move);
   // Serial.print("\tTachometer: ");
   // Serial.print(average);
-  // Serial.print("\tCount: ");sssssss
-  // Serial.print(count);
   // Serial.print("\tRPM: ");
   // Serial.print(RPM);
   // Serial.print("\tDistance: ");
   // Serial.print(distance);
   // Serial.print("\Predicted: ");
   // Serial.println(predicted);
-
 }
 
 // it is also the code that I stole from internet.
