@@ -15,8 +15,8 @@ unsigned long RPM;
 unsigned int PulseCounter = 1;
 unsigned long PeriodSum;
 
-unsigned long startTime;
-unsigned long stopTime;
+unsigned long startTime = 0;
+unsigned long stopTime = 0;
 unsigned long elapsedTime = 0;
 unsigned long LastTimeCycleMeasure = LastTimeWeMeasured;
 unsigned long CurrentMicros = micros();
@@ -42,7 +42,6 @@ void setup() {
 }
 
 void loop() {
-  stopTime = 0;
 
   // code that I stole from internet to measure RPM and I have no idea how it works
   LastTimeCycleMeasure = LastTimeWeMeasured;
@@ -116,11 +115,11 @@ void loop() {
   // Serial.print(move);
   // Serial.print("\tTachometer: ");
   // Serial.print(average);
-  // Serial.print("\tRPM: ");
+  // Serial.print("RPM: ");
   // Serial.print(RPM);
   // Serial.print("\tDistance: ");
   // Serial.print(distance);
-  // Serial.print("\Predicted: ");
+  // Serial.print("\tPredicted: ");
   // Serial.println(predicted);
 }
 
